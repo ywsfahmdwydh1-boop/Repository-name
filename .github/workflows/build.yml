@@ -29,7 +29,7 @@ jobs:
 
     - name: Build with Buildozer
       run: |
-        yes | python -m buildozer -v android debug
+        ACCEPT_BUILD_TOOLS_CHECKSUM=true python -m buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
