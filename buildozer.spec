@@ -1,57 +1,58 @@
-name: Build Android APK
+[app]
 
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+# اسم التطبيق
+title = Number Guessing Game
 
-jobs:
-  build:
-    runs-on: ubuntu-22.04
+# اسم الحزمة
+package.name = numberguessing
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+# الدومين
+package.domain = org.example
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+# ملف التشغيل
+source.include_exts = py,png,jpg,jpeg,kv,atlas
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            git \
-            zip \
-            unzip \
-            openjdk-17-jdk \
-            autoconf \
-            automake \
-            libtool \
-            pkg-config \
-            zlib1g-dev \
-            libncurses5-dev \
-            libncursesw5-dev \
-            libtinfo5 \
-            cmake \
-            libffi-dev \
-            libssl-dev
+# مجلد المشروع
+source.dir = .
 
-      - name: Install Python packages
-        run: |
-          python -m pip install --upgrade pip
-          pip install buildozer cython==0.29.37
+# ملف البداية
+entrypoint = main.py
 
-      - name: Build APK
-        run: |
-          buildozer -v android debug
-        env:
-          BUILDOZER_ALLOW_ROOT: "1"
+# إصدار التطبيق
+version = 1.0
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apk
-          path: bin/*.apk
+# المكتبات المطلوبة
+requirements = python3,kivy
+
+# اتجاه الشاشة
+orientation = portrait
+
+# اسم الشاشة
+fullscreen = 0
+
+
+[buildozer]
+
+# مستوى التحذيرات
+log_level = 2
+
+# تشغيل التحسين
+warn_on_root = 1
+
+
+[app:android]
+
+# معمارية أندرويد
+android.archs = arm64-v8a
+
+# أقل إصدار أندرويد
+android.minapi = 21
+
+# إصدار SDK
+android.api = 35
+
+# إصدار NDK
+android.ndk = 27c
+
+# قبول تراخيص أندرويد
+android.accept_sdk_license = True
