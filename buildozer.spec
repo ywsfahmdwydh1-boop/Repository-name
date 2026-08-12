@@ -1,54 +1,57 @@
-[app]
+name: Build Android APK
 
-# (str) Title of your application
-title = Guess Game
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
-# (str) Package name
-package.name = guessgame
+jobs:
+  build:
+    runs-on: ubuntu-22.04
 
-# (str) Package domain (needed for android packaging)
-package.domain = org.test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-# (str) Source code where the main.py live
-source.dir = .
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-# (list) Source files to include (process only files with these extensions)
-source.include_exts = py,png,jpg,kv,atlas
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git \
+            zip \
+            unzip \
+            openjdk-17-jdk \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            zlib1g-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libtinfo5 \
+            cmake \
+            libffi-dev \
+            libssl-dev
 
-# (str) Application version
-version = 0.1
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install buildozer cython==0.29.37
 
-# (list) Application requirements
-requirements = python3,kivy
+      - name: Build APK
+        run: |
+          buildozer -v android debug
+        env:
+          BUILDOZER_ALLOW_ROOT: "1"
 
-# (str) Supported orientation
-orientation = portrait
-
-# (bool) Indicate if the application should be fullscreen or not
-fullscreen = 0
-
-# (list) Permissions
-android.permissions = INTERNET
-
-# (int) Target Android API
-android.api = 31
-
-# (int) Minimum API required
-android.minapi = 21
-
-# (str) Android NDK version to use
-android.ndk = 23b
-
-# (bool) Automatically accept SDK license agreements
-android.accept_sdk_license = True
-
-# (list) The Android archs to build for
-android.archs = arm64-v8a, armeabi-v7a
-
-[buildozer]
-
-# (int) Log level (0 = error only, 1 = info, 2 = debug (with command output))
-log_level = 2
-
-# (int) Display warning if buildozer is run as root
-warn_on_root = 1
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: bin/*.apk
