@@ -26,18 +26,31 @@ jobs:
     - name: Install System Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y git zip unzip python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev cmake libffi-dev libssl-dev
+        sudo apt-get install -y git zip unzip python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev cmake libffi-dev libssl-dev wget
+
+    - name: Setup Android SDK Commandline Tools
+      run: |
+        mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools
+        mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
+        cd ~/.buildozer/android/platform/android-sdk/cmdline-tools
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9441913_latest.zip -O tools.zip
+        unzip -q tools.zip
+        mv cmdline-tools latest
+        
+        # Link sdkmanager to old tools path expected by buildozer
+        ln -s ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+        
+        # Accept licenses
+        yes | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=~/.buildozer/android/platform/android-sdk --licenses || true
 
     - name: Install Buildozer and Cython
       run: |
         python -m pip install --upgrade pip setuptools
         python -m pip install "cython<3.0.0" buildozer
 
-    - name: Accept Android SDK Licenses & Build
+    - name: Build with Buildozer
       run: |
-        mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-        printf "\n24333702352551978d15d32e8693861db923022c\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333702352551978d15d32e8693861db923022c" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-        yes | buildozer -v android debug || buildozer -v android debug
+        buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
