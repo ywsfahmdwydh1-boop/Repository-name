@@ -1,24 +1,51 @@
-[app]
+name: Build Android APK
 
-title = Guess Number
-package.name = guessnumber
-package.domain = org.example
+on:
+  workflow_dispatch:
 
-source.dir = .
-source.include_exts = py,png,jpg,jpeg,kv,atlas
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-entrypoint = main.py
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-version = 1.0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-requirements = python3,kivy
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            git \
+            zip \
+            unzip \
+            openjdk-17-jdk \
+            python3-pip \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            zlib1g-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libtinfo5
 
-orientation = portrait
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install buildozer cython==0.29.37
 
-fullscreen = 0
+      - name: Build APK
+        run: |
+          yes | buildozer -v android debug
 
-
-[buildozer]
-
-log_level = 2
-warn_on_root = 1
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Guess-Number-APK
+          path: bin/*.apk
