@@ -1,97 +1,154 @@
-import tkinter as tk
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
+from kivy.uix.button import Button
+from kivy.uix.widget import Widget
+from kivy.metrics import dp
 import random
 
-correct_guess = random.randint(1, 10)
-attempts = 0
 
-def check_guess():
-    global attempts
+class GuessGame(BoxLayout):
 
-    try:
-        guess = int(entry.get())
-    except ValueError:
-        result.config(text="اكتب رقمًا صحيحًا فقط")
-        return
+    def init(self, **kwargs):
+        super().init(
+            orientation="vertical",
+            padding=dp(30),
+            spacing=dp(15),
+            **kwargs
+        )
 
-    attempts += 1
-    attempts_label.config(text=f"المحاولات: {attempts}")
+        self.correct_guess = random.randint(1, 10)
+        self.attempts = 0
 
-    if guess == correct_guess:
-        result.config(text=f"صح! الرقم هو {correct_guess}")
-        guess_button.config(state="disabled")
-    elif guess < correct_guess:
-        result.config(text="أعلى من كده")
-    else:
-        result.config(text="أقل من كده")
+        self.title = Label(
+            text="لعبة خمن الرقم",
+            font_size="28sp",
+            bold=True,
+            size_hint=(1, 0.18)
+        )
 
-def new_game():
-    global correct_guess, attempts
+        self.instruction = Label(
+            text="خمن رقم من 1 إلى 10",
+            font_size="20sp",
+            size_hint=(1, 0.12)
+        )
 
-    correct_guess = random.randint(1, 10)
-    attempts = 0
+        self.entry = TextInput(
+            hint_text="اكتب الرقم هنا",
+            font_size="24sp",
+            halign="center",
+            multiline=False,
+            input_filter="int",
+            size_hint=(1, 0.15)
+        )
 
-    entry.delete(0, tk.END)
-    result.config(text="خمن رقم من 1 إلى 10")
-    attempts_label.config(text="المحاولات: 0")
-    guess_button.config(state="normal")
-    entry.focus_set()
+        self.guess_button = Button(
+            text="خمن",
+            font_size="20sp",
+            size_hint=(1, 0.15)
+        )
 
-window = tk.Tk()
-window.title("لعبة خمن الرقم")
-window.geometry("400x450")
-window.resizable(False, False)
+        self.result = Label(
+            text="خمن رقم من 1 إلى 10",
+            font_size="18sp",
+            size_hint=(1, 0.15)
+        )
 
-title = tk.Label(
-    window,
-    text="لعبة خمن الرقم",
-    font=("Arial", 24, "bold")
-)
-title.pack(pady=30)
+        self.attempts_label = Label(
+            text="المحاولات: 0",
+            font_size="18sp",
+            size_hint=(1, 0.10)
+        )
 
-instruction = tk.Label(
-    window,
-    text="خمن رقم من 1 إلى 10",
-    font=("Arial", 16)
-)
-instruction.pack(pady=10)
+        self.new_game_button = Button(
+            text="لعبة جديدة",
+            font_size="18sp",
+            size_hint=(1, 0.15)
+        )
 
-entry = tk.Entry(
-    window,
-    font=("Arial", 20),
-    justify="center"
-)
-entry.pack(pady=20)
-entry.focus_set()
+        self.guess_button.bind(
+            on_release=self.check_guess
+        )
 
-guess_button = tk.Button(
-    window,
-    text="خمن",
-    font=("Arial", 16),
-    command=check_guess
-)
-guess_button.pack(pady=10)
+        self.new_game_button.bind(
+            on_release=self.new_game
+        )
 
-result = tk.Label(
-    window,
-    text="خمن رقم من 1 إلى 10",
-    font=("Arial", 15)
-)
-result.pack(pady=20)
+        self.entry.bind(
+            on_text_validate=self.check_guess
+        )
 
-attempts_label = tk.Label(
-    window,
-    text="المحاولات: 0",
-    font=("Arial", 14)
-)
-attempts_label.pack(pady=10)
+        self.add_widget(self.title)
+        self.add_widget(self.instruction)
+        self.add_widget(self.entry)
+        self.add_widget(self.guess_button)
+        self.add_widget(self.result)
+        self.add_widget(self.attempts_label)
+        self.add_widget(self.new_game_button)
 
-new_game_button = tk.Button(
-    window,
-    text="لعبة جديدة",
-    font=("Arial", 14),
-    command=new_game
-)
-new_game_button.pack(pady=20)
+    def check_guess(self, instance):
+        text = self.entry.text.strip()
 
-window.bind("<Return>", lambda event: check_guess())
-window.mainloop()
+        if not text:
+            self.result.text = "اكتب رقمًا أولًا"
+            return
+
+        try:
+            guess = int(text)
+        except ValueError:
+            self.result.text = "اكتب رقمًا صحيحًا فقط"
+            return
+
+        if guess < 1 or guess > 10:
+            self.result.text = "اكتب رقمًا من 1 إلى 10"
+            return
+
+        self.attempts += 1
+
+        self.attempts_label.text = (
+            f"المحاولات: {self.attempts}"
+        )
+
+        if guess == self.correct_guess:
+            self.result.text = (
+                f"صح! الرقم هو {self.correct_guess}"
+            )
+
+            self.guess_button.disabled = True
+
+        elif guess < self.correct_guess:
+            self.result.text = "أعلى من كده"
+
+        else:
+            self.result.text = "أقل من كده"
+
+        self.entry.text = ""
+
+    def new_game(self, instance):
+        self.correct_guess = random.randint(1, 10)
+        self.attempts = 0
+
+        self.entry.text = ""
+
+        self.result.text = (
+            "خمن رقم من 1 إلى 10"
+        )
+
+        self.attempts_label.text = (
+            "المحاولات: 0"
+        )
+
+        self.guess_button.disabled = False
+
+        self.entry.focus = True
+
+
+class GuessGameApp(App):
+
+    def build(self):
+        return GuessGame()
+
+
+if name == "main":
+    GuessGameApp().run()
