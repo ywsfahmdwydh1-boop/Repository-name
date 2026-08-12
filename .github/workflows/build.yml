@@ -48,8 +48,14 @@ jobs:
         run: |
           yes | buildozer -v android debug
 
+      - name: Find APK
+        run: |
+          echo "Searching for APK files..."
+          find . -type f -name "*.apk" -print
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Guess-Number-APK
-          path: bin/*.apk
+          path: "**/*.apk"
+          if-no-files-found: error
